@@ -30,7 +30,7 @@ class FirestorageService {
     }
   }
 
-  Future<TaskSnapshot> upload(String path) {
+  Future<TaskSnapshot> upload(String path) async {
     return _initFirestorage().then((_) {
       File file = File(path);
       return _firebaseStorage!
@@ -41,12 +41,16 @@ class FirestorageService {
     });
   }
 
-  Future<String> getLinkDownload(String path) {
-    return _initFirestorage()
-        .then((_) => _firebaseStorage!.ref().child(path).getDownloadURL());
+  Future<String?> getLinkDownload(String path) async {
+    try {
+      await _initFirestorage();
+      return await _firebaseStorage!.ref().child(path).getDownloadURL();
+    } catch (e) {
+      return null;
+    }
   }
 
-  Future<void> delete(String path) {
+  Future<void> delete(String path) async {
     return _initFirestorage()
         .then((_) => _firebaseStorage!.ref().child(path).delete());
   }

@@ -21,6 +21,7 @@ class _HomeState extends State<Home> {
   final List<Product> _oldProduct = [];
   final _seconds = 5;
   Timer? _timer;
+  late Key _keyListView;
 
   final _streamController = StreamController<(DocumentChangeType, Product)>();
 
@@ -71,6 +72,7 @@ class _HomeState extends State<Home> {
     super.initState();
     FirestoreService.instance
         .listenChanges(Product.collectionName, _streamController);
+    _keyListView = UniqueKey();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _streamController.stream.listen((event) {
@@ -80,6 +82,8 @@ class _HomeState extends State<Home> {
             context.read<ProductCubit>().addOrUpdateIfExist(event.$2);
             break;
           case DocumentChangeType.removed:
+            // Support remove useless img on Firestorage
+            FirestorageService.instance.delete(event.$2.imgUrl ?? "");
             context.read<ProductCubit>().remove(event.$2);
             break;
           default:
@@ -110,32 +114,40 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("admin")),
-      body: FutureBuilder(
-        future: _loadData(),
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            return BlocBuilder<ProductCubit, Map<String, Product>>(
-                builder: (context, state) {
-              return ListView.builder(
-                itemBuilder: (_, index) {
-                  final p = state.values.elementAt(index);
-                  if (!_oldProduct.contains(p)) {
-                    return ProductCard(
-                      pro: p,
-                      onDelete: _delete,
-                    );
-                  }
-                  return Container();
-                },
-                itemCount: state.values.length,
-              );
-            });
-          }
-
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
+      body: RefreshIndicator(
+        onRefresh: () async {
+          setState(() {
+            _keyListView = UniqueKey();
+          });
         },
+        child: FutureBuilder(
+          key: _keyListView,
+          future: _loadData(),
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              return BlocBuilder<ProductCubit, Map<String, Product>>(
+                  builder: (context, state) {
+                return ListView.builder(
+                  itemBuilder: (_, index) {
+                    final p = state.values.elementAt(index);
+                    if (!_oldProduct.contains(p)) {
+                      return ProductCard(
+                        pro: p,
+                        onDelete: _delete,
+                      );
+                    }
+                    return Container();
+                  },
+                  itemCount: state.values.length,
+                );
+              });
+            }
+
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          },
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         heroTag: 'thumbnail',

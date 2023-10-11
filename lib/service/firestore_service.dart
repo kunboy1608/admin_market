@@ -93,10 +93,20 @@ class FirestoreService {
         _firestore!.collection(collectionName).snapshots().listen((event) {
           if (collectionName == Product.collectionName) {
             for (var element in event.docChanges) {
-              controller.sink.add((
-                element.type,
-                Product.fromMap(element.doc.data()!)..id = element.doc.id
-              ));
+              Product p = Product.fromMap(element.doc.data()!)
+                ..id = element.doc.id;
+              // Get actually link
+              if (p.imgUrl != null &&
+                  element.type != DocumentChangeType.removed) {
+                FirestorageService.instance
+                    .getLinkDownload(p.imgUrl!)
+                    .then((value) {
+                  p.actuallyLink = value;
+                  controller.sink.add((element.type, p));
+                });
+              } else {
+                controller.sink.add((element.type, p));
+              }
             }
           }
         }));
