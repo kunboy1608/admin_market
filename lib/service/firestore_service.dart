@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:admin_market/entity/entity.dart';
 import 'package:admin_market/entity/product.dart';
 import 'package:admin_market/service/firebase_service.dart';
-import 'package:admin_market/service/firestorage_service.dart';
+import 'package:admin_market/service/image_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:synchronized/synchronized.dart';
 
@@ -50,7 +50,7 @@ class FirestoreService {
         final p = list[i] as Product;
         if (p.imgUrl != null) {
           p.actuallyLink =
-              await FirestorageService.instance.getLinkDownload(p.imgUrl!);
+              await ImageService.instance.getActuallyLink(p.imgUrl!);
         }
       }
     }
@@ -98,9 +98,7 @@ class FirestoreService {
               // Get actually link
               if (p.imgUrl != null &&
                   element.type != DocumentChangeType.removed) {
-                FirestorageService.instance
-                    .getLinkDownload(p.imgUrl!)
-                    .then((value) {
+                ImageService.instance.getActuallyLink(p.imgUrl!).then((value) {
                   p.actuallyLink = value;
                   controller.sink.add((element.type, p));
                 });

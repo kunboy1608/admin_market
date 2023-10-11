@@ -51,9 +51,9 @@ class _ProductEditorState extends State<ProductEditor> {
 
       if (widget.data!.actuallyLink != null &&
           widget.data!.actuallyLink!.isNotEmpty) {
-        _img = FadeInImage.assetNetwork(
-          placeholder: 'assets/img/loading.gif',
-          image: widget.data!.actuallyLink!,
+        _img = FadeInImage(
+          placeholder: const AssetImage('assets/img/loading.gif'),
+          image: FileImage(File(widget.data!.actuallyLink!)),
         );
       }
     }

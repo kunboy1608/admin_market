@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:admin_market/entity/product.dart';
 import 'package:admin_market/home/product_editor.dart';
 import 'package:admin_market/util/const.dart';
@@ -39,7 +41,7 @@ class _ProductCardState extends State<ProductCard> {
       child: Padding(
         padding: const EdgeInsets.only(top: defPading),
         child: Dismissible(
-          key: UniqueKey(),          
+          key: UniqueKey(),
           background: Container(
             alignment: AlignmentDirectional.centerEnd,
             color: Theme.of(context).colorScheme.errorContainer,
@@ -65,9 +67,11 @@ class _ProductCardState extends State<ProductCard> {
                           borderRadius: BorderRadius.circular(defRadius),
                           child: widget.pro.actuallyLink != null &&
                                   widget.pro.actuallyLink!.isNotEmpty
-                              ? FadeInImage.assetNetwork(
-                                  placeholder: 'assets/img/loading.gif',
-                                  image: widget.pro.actuallyLink!,
+                              ? FadeInImage(
+                                  placeholder: const AssetImage(
+                                      'assets/img/loading.gif'),
+                                  image:
+                                      FileImage(File(widget.pro.actuallyLink!)),
                                 )
                               : const Icon(
                                   Icons.add_rounded,
