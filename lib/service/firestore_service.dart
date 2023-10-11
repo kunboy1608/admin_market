@@ -5,6 +5,7 @@ import 'package:admin_market/entity/product.dart';
 import 'package:admin_market/service/firebase_service.dart';
 import 'package:admin_market/service/image_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:synchronized/synchronized.dart';
 
 class FirestoreService {
@@ -58,8 +59,12 @@ class FirestoreService {
   }
 
   Future<void> delete(String collectionName, String id) async {
-    return _initFireStore()
-        .then((_) => _firestore!.collection(collectionName).doc(id).delete());
+    try {
+      await _initFireStore();
+      return await _firestore!.collection(collectionName).doc(id).delete();
+    } catch (e) {
+      debugPrint(e.toString());
+    }
   }
 
   Future<DocumentReference<Map<String, dynamic>>> add(Entity e) async {

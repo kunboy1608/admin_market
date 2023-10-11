@@ -30,6 +30,12 @@ class _ProductCardState extends State<ProductCard> {
   }
 
   @override
+  void didUpdateWidget(covariant ProductCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _pro = widget.pro;
+  }
+
+  @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () => Navigator.push(
@@ -87,11 +93,15 @@ class _ProductCardState extends State<ProductCard> {
                       style: Theme.of(context).textTheme.headlineSmall,
                     ),
                     Text(
-                      _pro.provider ?? "",
+                      "Provider: ${_pro.provider ?? ""}",
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     Text(
-                      formatCurrency(_pro.price),
+                      "Price: ${formatCurrency(_pro.price)}",
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    Text(
+                      "Category: ${_pro.categoryId?.toString() ?? ""}",
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                   ],

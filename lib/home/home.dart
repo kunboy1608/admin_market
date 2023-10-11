@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:admin_market/bloc/product_cubit.dart';
 import 'package:admin_market/entity/product.dart';
@@ -22,6 +23,7 @@ class _HomeState extends State<Home> {
   final _seconds = 5;
   Timer? _timer;
   late Key _keyListView;
+  bool? _isSortedByCategory;
 
   final _streamController = StreamController<(DocumentChangeType, Product)>();
 
@@ -42,6 +44,11 @@ class _HomeState extends State<Home> {
         FirestoreService.instance
             .delete(Product.collectionName, element.id ?? "");
         if (element.imgUrl != null) {
+          if (element.actuallyLink != null &&
+              element.actuallyLink!.isNotEmpty) {
+            final file = File(element.actuallyLink!);
+            file.exists().then((value) => value ? file.delete() : ());
+          }
           FirestorageService.instance.delete(element.imgUrl!);
         }
       }
@@ -76,6 +83,7 @@ class _HomeState extends State<Home> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _streamController.stream.listen((event) {
+        _isSortedByCategory = null;
         switch (event.$1) {
           case DocumentChangeType.added:
           case DocumentChangeType.modified:
@@ -113,11 +121,38 @@ class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("admin")),
+      appBar: AppBar(
+        title: const Text("Admin - Product management"),
+        actions: [
+          PopupMenuButton<bool>(
+            onSelected: (value) {
+              if (value != _isSortedByCategory) {
+                _isSortedByCategory = value;
+                if (_isSortedByCategory!) {
+                  context.read<ProductCubit>().sortByCategory();
+                } else {
+                  context.read<ProductCubit>().sortByName();
+                }
+              }
+            },
+            itemBuilder: (BuildContext context) => <PopupMenuEntry<bool>>[
+              const PopupMenuItem<bool>(
+                value: false,
+                child: Text('Order by Product\'s name'),
+              ),
+              const PopupMenuItem<bool>(
+                value: true,
+                child: Text('Order by Product\'s category'),
+              ),
+            ],
+          )
+        ],
+      ),
       body: RefreshIndicator(
         onRefresh: () async {
           setState(() {
             _keyListView = UniqueKey();
+            _isSortedByCategory = false;
           });
         },
         child: FutureBuilder(

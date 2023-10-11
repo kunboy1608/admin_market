@@ -24,7 +24,7 @@ class ImageService {
     String fileName = imgUrl.substring(imgUrl.indexOf("/") + 1);
     return getTemporaryDirectory().then(
         (direc) => File("${direc.path}/$fileName").exists().then((exists) {
-              /// Missing local img vs cloud image are not matched
+              /// TODO: Missing check local img vs cloud image are not matched
               if (exists) {
                 return "${direc.path}/$fileName";
               } else {

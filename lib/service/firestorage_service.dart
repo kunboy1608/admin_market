@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:admin_market/service/firebase_service.dart';
+import 'package:flutter/foundation.dart';
 import 'package:synchronized/synchronized.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
@@ -51,7 +52,11 @@ class FirestorageService {
   }
 
   Future<void> delete(String path) async {
-    return _initFirestorage()
-        .then((_) => _firebaseStorage!.ref().child(path).delete());
+    try {
+      await _initFirestorage();
+      return await _firebaseStorage!.ref().child(path).delete();
+    } catch (e) {
+      debugPrint(e.toString());
+    }
   }
 }
