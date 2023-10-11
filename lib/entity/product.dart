@@ -37,6 +37,7 @@ class Product extends Entity {
       'img_url': imgUrl,
       'provider': provider,
       'date': date,
+      'actually_link': actuallyLink
     };
   }
 }

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:admin_market/service/firestorage_service.dart';
 import 'package:admin_market/service/firestore_service.dart';
 import 'package:admin_market/util/const.dart';
@@ -16,7 +18,6 @@ import '../util/thousand_seprator_input_formater.dart';
 class ProductEditor extends StatefulWidget {
   const ProductEditor({super.key, this.data});
   final Product? data;
-
 
   @override
   State<ProductEditor> createState() => _ProductEditorState();
@@ -73,7 +74,9 @@ class _ProductEditorState extends State<ProductEditor> {
           _imgPath = "${direc.path}/${const Uuid().v4()}.jpg";
           image.saveTo(_imgPath!).then(
             (_) {
-              setState(() {});
+              setState(() {
+                _img = Image.file(File(_imgPath!));
+              });
             },
           );
         });
@@ -92,7 +95,9 @@ class _ProductEditorState extends State<ProductEditor> {
           _imgPath = "${direc.path}/${const Uuid().v4()}.jpg";
           image.saveTo(_imgPath!).then(
             (_) {
-              setState(() {});
+              setState(() {
+                _img = Image.file(File(_imgPath!));
+              });
             },
           );
         });
@@ -107,7 +112,10 @@ class _ProductEditorState extends State<ProductEditor> {
       return;
     }
 
-    if (_imgPath != null) {
+    String? oldImgUrl;
+
+    if (_imgPath != null && _imgPath!.isNotEmpty) {
+      oldImgUrl = _pro.imgUrl;
       _pro.imgUrl =
           "images/${_imgPath!.substring(_imgPath!.lastIndexOf("/") + 1)}";
     }
@@ -121,13 +129,20 @@ class _ProductEditorState extends State<ProductEditor> {
             .replaceAll(ThousandsSeparatorInputFormatter.SEPARATOR, ''))
         ..provider = _providerTEC.text);
     } else {
-      FirestoreService.instance.update(_pro
-        ..categoryId = _valueSelected
-        ..date = Timestamp.now()
-        ..name = _nameTEC.text
-        ..price = double.parse(_priceTEC.text
-            .replaceAll(ThousandsSeparatorInputFormatter.SEPARATOR, ''))
-        ..provider = _providerTEC.text);
+      FirestoreService.instance
+          .update(_pro
+            ..categoryId = _valueSelected
+            ..date = Timestamp.now()
+            ..name = _nameTEC.text
+            ..price = double.parse(_priceTEC.text
+                .replaceAll(ThousandsSeparatorInputFormatter.SEPARATOR, ''))
+            ..provider = _providerTEC.text)
+          .then((_) {
+        // delete old img
+        if (oldImgUrl != null && oldImgUrl.isNotEmpty) {
+          FirestorageService.instance.delete(oldImgUrl);
+        }
+      });
     }
 
     if (_imgPath != null) {

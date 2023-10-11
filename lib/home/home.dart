@@ -6,7 +6,6 @@ import 'package:admin_market/home/product_card.dart';
 import 'package:admin_market/home/product_editor.dart';
 import 'package:admin_market/service/firestorage_service.dart';
 import 'package:admin_market/service/firestore_service.dart';
-import 'package:admin_market/util/const.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -20,17 +19,20 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   final List<Product> _oldProduct = [];
-  int _seconds = 0;
+  final _seconds = 5;
   Timer? _timer;
 
   final _streamController = StreamController<(DocumentChangeType, Product)>();
 
-  void _setTimer() {
+  void _delete(Product p) {
+    String nameProduct = "";
+
+    nameProduct = p.name ?? nameProduct;
+
+    _oldProduct.add(p);
+
     // cancel previous instance if it exists
     _timer?.cancel();
-
-    // add more time waiting multi deletion
-    _seconds += 5;
 
     // Set time delete forever
     _timer = Timer(Duration(seconds: _seconds), () {
@@ -42,18 +44,26 @@ class _HomeState extends State<Home> {
           FirestorageService.instance.delete(element.imgUrl!);
         }
       }
-      _oldProduct.clear();
-      _seconds = 5;
-    });
-  }
 
-  void _undo(String id) {
-    for (int i = 0; i < _oldProduct.length; i++) {
-      if (_oldProduct[i].id == id) {
-        context.read<ProductCubit>().addOrUpdateIfExist(_oldProduct[i]);
-        _oldProduct.removeAt(i);
-      }
-    }
+      context.read<ProductCubit>().removeAll(_oldProduct);
+      _oldProduct.clear();
+    });
+
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(_oldProduct.length > 1
+            ? "Deleting ${_oldProduct.length} products"
+            : "Deleting product: $nameProduct"),
+        action: SnackBarAction(
+            label: _oldProduct.length > 1 ? "UNDO ALL" : "UNDO",
+            onPressed: () {
+              context.read<ProductCubit>().addOrUpdateIfExistAll(_oldProduct);
+              _oldProduct.clear();
+              _timer?.cancel();
+            }),
+      ),
+    );
   }
 
   @override
@@ -106,15 +116,18 @@ class _HomeState extends State<Home> {
           if (snapshot.hasData) {
             return BlocBuilder<ProductCubit, Map<String, Product>>(
                 builder: (context, state) {
-              return ListView.separated(
-                itemBuilder: (_, index) => ProductCard(
-                  pro: state.values.elementAt(index),
-                  setTimer: _setTimer,
-                  undo: _undo,
-                  oldProducts: _oldProduct,
-                ),
-                itemCount: state.length,
-                separatorBuilder: (_, __) => const SizedBox(height: defPading),
+              return ListView.builder(
+                itemBuilder: (_, index) {
+                  final p = state.values.elementAt(index);
+                  if (!_oldProduct.contains(p)) {
+                    return ProductCard(
+                      pro: p,
+                      onDelete: _delete,
+                    );
+                  }
+                  return Container();
+                },
+                itemCount: state.values.length,
               );
             });
           }
@@ -124,10 +137,6 @@ class _HomeState extends State<Home> {
           );
         },
       ),
-      // bottomNavigationBar: Container(
-      //   height: 80,
-      //   color: Colors.redAccent,
-      // ),
       floatingActionButton: FloatingActionButton(
         heroTag: 'thumbnail',
         onPressed: () {

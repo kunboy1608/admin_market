@@ -65,9 +65,9 @@ class FirestoreService {
   Future<DocumentReference<Map<String, dynamic>>> add(Entity e) async {
     return _initFireStore().then((_) {
       if (e is Product) {
-        return _firestore!
-            .collection(Product.collectionName)
-            .add(e.toMap()..remove("id"));
+        return _firestore!.collection(Product.collectionName).add(e.toMap()
+          ..remove("id")
+          ..remove("actually_link"));
       }
       throw "Unknow error";
     });
@@ -79,7 +79,9 @@ class FirestoreService {
         return _firestore!
             .collection(Product.collectionName)
             .doc(e.id)
-            .update(e.toMap()..remove("id"));
+            .update(e.toMap()
+              ..remove("id")
+              ..remove("actually_link"));
       }
       throw "Unknow error";
     });
