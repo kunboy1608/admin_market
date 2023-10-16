@@ -20,7 +20,7 @@ class ProductCubit extends Cubit<Map<String, Product>> {
     emit(Map.of(state));
   }
 
-  void remove(Product p) => (p.id ?? "");
+  void remove(Product p) => removeById(p.id ?? "");
 
   void removeById(String id) {
     state.remove(id);

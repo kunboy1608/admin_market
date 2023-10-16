@@ -23,8 +23,7 @@ class ImageService {
   Future<String?> getActuallyLink(String imgUrl) async {
     String fileName = imgUrl.substring(imgUrl.indexOf("/") + 1);
     return getTemporaryDirectory().then(
-        (direc) => File("${direc.path}/$fileName").exists().then((exists) {
-              /// TODO: Missing check local img vs cloud image are not matched
+        (direc) => File("${direc.path}/$fileName").exists().then((exists) {              
               if (exists) {
                 return "${direc.path}/$fileName";
               } else {
