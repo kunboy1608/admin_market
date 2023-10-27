@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:admin_market/service/firebase_service.dart';
+import 'package:admin_market/service/google/firebase_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:synchronized/synchronized.dart';
 import 'package:firebase_storage/firebase_storage.dart';

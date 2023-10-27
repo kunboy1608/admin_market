@@ -1,10 +1,8 @@
-import 'package:admin_market/bloc/product_cubit.dart';
 import 'package:admin_market/home/home.dart';
-import 'package:admin_market/service/firebase_service.dart';
+import 'package:admin_market/service/google/firebase_service.dart';
 import 'package:admin_market/util/const.dart';
 import 'package:admin_market/util/widget_util.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -60,10 +58,7 @@ class _LoginState extends State<Login> {
         Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => BlocProvider(
-                create: (_) => ProductCubit({}),
-                child: const Home(),
-              ),
+              builder: (context) => const Home(),
             ));
       } else {
         setState(() {
@@ -76,16 +71,11 @@ class _LoginState extends State<Login> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: GestureDetector(
-        onTap: () {
-          FocusScope.of(context).unfocus();
-        },
-        child: Image.asset(
-          "assets/img/background_login.png",
-          width: MediaQuery.of(context).size.width,
-          height: MediaQuery.of(context).size.height,
-          fit: BoxFit.cover,
-        ),
+      body: Image.asset(
+        "assets/img/background_login.png",
+        width: MediaQuery.of(context).size.width,
+        height: MediaQuery.of(context).size.height,
+        fit: BoxFit.cover,
       ),
       bottomSheet: SingleChildScrollView(
         child: Container(

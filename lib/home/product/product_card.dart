@@ -1,9 +1,10 @@
 import 'dart:io';
 
 import 'package:admin_market/entity/product.dart';
-import 'package:admin_market/home/product_editor.dart';
+import 'package:admin_market/home/product/product_editor.dart';
 import 'package:admin_market/util/const.dart';
 import 'package:admin_market/util/string_utils.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -27,6 +28,40 @@ class _ProductCardState extends State<ProductCard> {
   void initState() {
     super.initState();
     _pro = widget.pro;
+  }
+
+  Widget _getPriceWidget() {
+    final now = Timestamp.now();
+    if (_pro.discountPrice != null &&
+        (_pro.startDiscountDate != null || _pro.endDiscountDate != null) &&
+        (_pro.startDiscountDate == null ||
+            now.compareTo(_pro.startDiscountDate!) > 0) &&
+        (_pro.endDiscountDate == null ||
+            now.compareTo(_pro.endDiscountDate!) < 0)) {
+      return RichText(
+        text: TextSpan(
+          children: <TextSpan>[
+            TextSpan(
+              text: formatCurrency(_pro.price),
+              style: TextStyle(
+                color: Theme.of(context).disabledColor,
+                decoration: TextDecoration.lineThrough,
+              ),
+            ),
+            TextSpan(
+              style: Theme.of(context).textTheme.bodyLarge,
+              text: "\n${formatCurrency(_pro.discountPrice)}",
+            ),
+          ],
+        ),
+      );
+    }
+    return Text(
+      "${formatCurrency(_pro.price)} ",
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: Theme.of(context).textTheme.bodyLarge,
+    );
   }
 
   @override
@@ -74,6 +109,7 @@ class _ProductCardState extends State<ProductCard> {
                           child: widget.pro.actuallyLink != null &&
                                   widget.pro.actuallyLink!.isNotEmpty
                               ? FadeInImage(
+                                  fit: BoxFit.cover,
                                   placeholder: const AssetImage(
                                       'assets/img/loading.gif'),
                                   image:
@@ -90,19 +126,20 @@ class _ProductCardState extends State<ProductCard> {
                   children: [
                     Text(
                       _pro.name ?? "",
-                      style: Theme.of(context).textTheme.headlineSmall,
+                      style: Theme.of(context).textTheme.titleLarge,
                     ),
                     Text(
                       "Provider: ${_pro.provider ?? ""}",
-                      style: Theme.of(context).textTheme.titleMedium,
+                      style: Theme.of(context).textTheme.bodyLarge,
                     ),
-                    Text(
-                      "Price: ${formatCurrency(_pro.price)}",
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
+                    _getPriceWidget(),
                     Text(
                       "Category: ${_pro.categoryId?.toString() ?? ""}",
-                      style: Theme.of(context).textTheme.titleMedium,
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                    Text(
+                      "Sold: ${_pro.quantitySold?.toString() ?? "0"}",
+                      style: Theme.of(context).textTheme.bodyLarge,
                     ),
                   ],
                 )

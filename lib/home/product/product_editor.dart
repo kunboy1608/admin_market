@@ -1,7 +1,7 @@
 import 'dart:io';
 
-import 'package:admin_market/service/firestorage_service.dart';
-import 'package:admin_market/service/firestore_service.dart';
+import 'package:admin_market/service/entity/product_service.dart';
+import 'package:admin_market/service/google/firestorage_service.dart';
 import 'package:admin_market/util/const.dart';
 import 'package:admin_market/util/widget_util.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -12,8 +12,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 
-import '../entity/product.dart';
-import '../util/thousand_seprator_input_formater.dart';
+import '../../entity/product.dart';
 
 class ProductEditor extends StatefulWidget {
   const ProductEditor({super.key, this.data});
@@ -25,11 +24,26 @@ class ProductEditor extends StatefulWidget {
 
 class _ProductEditorState extends State<ProductEditor> {
   final _formKey = GlobalKey<FormState>();
+  final _formDiscountKey = GlobalKey<FormState>();
+
   final TextEditingController _nameTEC = TextEditingController();
   final TextEditingController _priceTEC = TextEditingController();
   final TextEditingController _providerTEC = TextEditingController();
+  final TextEditingController _descriptionTEC = TextEditingController();
+  final TextEditingController _discountPriceTEC = TextEditingController();
+
   final FocusNode _nodePrice = FocusNode();
   final FocusNode _nodeProvider = FocusNode();
+  final FocusNode _nodeCategory = FocusNode();
+  final FocusNode _nodeDecription = FocusNode();
+  final FocusNode _nodeDiscountPrice = FocusNode();
+
+  bool _isDiscount = false;
+  DateTime? _startDiscountDate;
+  DateTime? _endDiscountDate;
+
+  String _noti = "";
+
   final _picker = ImagePicker();
 
   Widget? _img;
@@ -45,9 +59,16 @@ class _ProductEditorState extends State<ProductEditor> {
     _pro = widget.data ?? Product();
     if (widget.data != null) {
       _nameTEC.text = _pro.name ?? "";
-      _priceTEC.text = _pro.price?.toString() ?? "0";
+      _priceTEC.text = _pro.price?.toString() == null
+          ? "0"
+          : double.parse(_pro.price!.toString()).toString();
       _providerTEC.text = _pro.provider ?? "";
       _valueSelected = _pro.categoryId ?? 1;
+      _startDiscountDate = _pro.startDiscountDate?.toDate();
+      _endDiscountDate = _pro.endDiscountDate?.toDate();
+
+      _isDiscount = _pro.discountPrice != null;
+      _discountPriceTEC.text = _pro.discountPrice?.toString() ?? "";
 
       if (widget.data!.actuallyLink != null &&
           widget.data!.actuallyLink!.isNotEmpty) {
@@ -65,7 +86,29 @@ class _ProductEditorState extends State<ProductEditor> {
     );
   }
 
-  void _getImageFromGallery() async {
+  Future<DateTime?> _chooseDate() {
+    return showDatePicker(
+            context: context,
+            initialDatePickerMode: DatePickerMode.year,
+            initialDate: DateTime.now(),
+            firstDate: DateTime(0),
+            lastDate: DateTime(9999))
+        .then((date) {
+      if (date != null) {
+        return showTimePicker(context: context, initialTime: TimeOfDay.now())
+            .then((time) {
+          if (time != null) {
+            return DateTime(
+                date.year, date.month, date.day, time.hour, time.minute);
+          }
+          return date;
+        });
+      }
+      return null;
+    });
+  }
+
+  void _getImageFromGallery() {
     _picker
         .pickImage(source: ImageSource.gallery, imageQuality: 30)
         .then((image) {
@@ -108,9 +151,21 @@ class _ProductEditorState extends State<ProductEditor> {
   }
 
   void _save() async {
-    if (!_formKey.currentState!.validate()) {
+    if (!_formKey.currentState!.validate() ||
+        (_isDiscount && !_formDiscountKey.currentState!.validate())) {
       return;
     }
+
+    if ((_isDiscount &&
+        _endDiscountDate == null &&
+        _startDiscountDate == null)) {
+      setState(() {
+        _noti = "Please choose periods time discount";
+      });
+      return;
+    }
+
+    WidgetUtil.showLoadingDialog(context);
 
     String? oldImgUrl;
 
@@ -120,22 +175,34 @@ class _ProductEditorState extends State<ProductEditor> {
           "images/${_imgPath!.substring(_imgPath!.lastIndexOf("/") + 1)}";
     }
 
+    if (_isDiscount) {
+      _pro
+        ..discountPrice = double.parse(_discountPriceTEC.text)
+        ..startDiscountDate = _startDiscountDate == null
+            ? null
+            : Timestamp.fromDate(_startDiscountDate!)
+        ..endDiscountDate = _endDiscountDate == null
+            ? null
+            : Timestamp.fromDate(_endDiscountDate!);
+    }
+
     if (widget.data == null) {
-      FirestoreService.instance.add(_pro
+      ProductService.instance.add(_pro
         ..categoryId = _valueSelected
-        ..date = Timestamp.now()
+        ..uploadDate = Timestamp.now()
         ..name = _nameTEC.text
-        ..price = double.parse(_priceTEC.text
-            .replaceAll(ThousandsSeparatorInputFormatter.SEPARATOR, ''))
+        // ..price = double.parse(_priceTEC.text
+        //     .replaceAll(ThousandsSeparatorInputFormatter.SEPARATOR, ''))
+        ..price = double.parse(_priceTEC.text)
         ..provider = _providerTEC.text);
     } else {
-      FirestoreService.instance
+      ProductService.instance
           .update(_pro
             ..categoryId = _valueSelected
-            ..date = Timestamp.now()
             ..name = _nameTEC.text
-            ..price = double.parse(_priceTEC.text
-                .replaceAll(ThousandsSeparatorInputFormatter.SEPARATOR, ''))
+            // ..price = double.parse(_priceTEC.text
+            //     .replaceAll(ThousandsSeparatorInputFormatter.SEPARATOR, ''))
+            ..price = double.parse(_priceTEC.text)
             ..provider = _providerTEC.text)
           .then((_) {
         // delete old img
@@ -168,11 +235,102 @@ class _ProductEditorState extends State<ProductEditor> {
             break;
         }
       });
-
-      WidgetUtil.showLoadingDialog(context);
     } else {
       Navigator.pop(context);
+      Navigator.pop(context);
     }
+  }
+
+  Widget _partInputDiscount() {
+    return AnimatedContainer(
+      height: _isDiscount ? 190.0 : 0.0,
+      duration: const Duration(seconds: 1),
+      child: SingleChildScrollView(
+        physics: const NeverScrollableScrollPhysics(),
+        child: Column(
+          children: [
+            Form(
+              key: _formDiscountKey,
+              child: TextFormField(
+                focusNode: _nodeDiscountPrice,
+                controller: _discountPriceTEC,
+                onEditingComplete: () => _nodeDecription.requestFocus(),
+                inputFormatters: <TextInputFormatter>[
+                  FilteringTextInputFormatter.digitsOnly,
+                ],
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return "Please enter product's discount price";
+                  }
+                  return null;
+                },
+                decoration: InputDecoration(
+                    label: const Text("Product's discount price*"),
+                    suffixIcon: IconButton(
+                        onPressed: () => _discountPriceTEC.text = "",
+                        icon: const Icon(Icons.clear_rounded))),
+              ),
+            ),
+            Row(
+              children: [
+                const Text("Start date:"),
+                Expanded(
+                    child: Text(_startDiscountDate.toString(),
+                        textAlign: TextAlign.right)),
+                IconButton(
+                    onPressed: () {
+                      setState(() {
+                        _startDiscountDate = null;
+                      });
+                    },
+                    icon: const Icon(Icons.clear_rounded)),
+                IconButton(
+                    onPressed: () {
+                      _chooseDate().then((value) {
+                        if (value != null) {
+                          setState(() {
+                            _startDiscountDate = value;
+                          });
+                        }
+                      });
+                    },
+                    icon: const Icon(Icons.calendar_today)),
+              ],
+            ),
+            Row(
+              children: [
+                const Text("End date:"),
+                Expanded(
+                    child: Text(_endDiscountDate.toString(),
+                        textAlign: TextAlign.right)),
+                IconButton(
+                    onPressed: () {
+                      setState(() {
+                        _endDiscountDate = null;
+                      });
+                    },
+                    icon: const Icon(Icons.clear_rounded)),
+                IconButton(
+                    onPressed: () {
+                      _chooseDate().then((value) {
+                        if (value != null) {
+                          setState(() {
+                            _endDiscountDate = value;
+                          });
+                        }
+                      });
+                    },
+                    icon: const Icon(Icons.calendar_today)),
+              ],
+            ),
+            Text(
+              _noti,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            )
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -180,7 +338,9 @@ class _ProductEditorState extends State<ProductEditor> {
     bool isLandscape =
         MediaQuery.of(context).orientation == Orientation.landscape;
     return Scaffold(
-      appBar: AppBar(),
+      appBar: AppBar(
+        title: const Text("Product editor"),
+      ),
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -282,7 +442,6 @@ class _ProductEditorState extends State<ProductEditor> {
                         onEditingComplete: () => _nodeProvider.requestFocus(),
                         inputFormatters: <TextInputFormatter>[
                           FilteringTextInputFormatter.digitsOnly,
-                          ThousandsSeparatorInputFormatter()
                         ],
                         validator: (value) {
                           if (value == null || value.isEmpty) {
@@ -300,6 +459,7 @@ class _ProductEditorState extends State<ProductEditor> {
                       TextFormField(
                         focusNode: _nodeProvider,
                         controller: _providerTEC,
+                        onEditingComplete: () => _nodeCategory.requestFocus(),
                         decoration: InputDecoration(
                             label: const Text("Product's provider*"),
                             suffixIcon: IconButton(
@@ -314,6 +474,7 @@ class _ProductEditorState extends State<ProductEditor> {
                       ),
                       const SizedBox(height: defPading),
                       DropdownButton(
+                          focusNode: _nodeCategory,
                           isExpanded: true,
                           value: _valueSelected,
                           items: const [
@@ -328,7 +489,48 @@ class _ProductEditorState extends State<ProductEditor> {
                             setState(() {
                               _valueSelected = value ?? _valueSelected;
                             });
+                            _nodeDecription.requestFocus();
                           }),
+                      const SizedBox(height: defPading),
+                      Row(
+                        children: [
+                          const Expanded(
+                              child: Text(
+                            "Create discount event",
+                            overflow: TextOverflow.ellipsis,
+                          )),
+                          Switch(
+                            value: _isDiscount,
+                            onChanged: (value) {
+                              setState(() {
+                                _isDiscount = value;
+                              });
+                              if (_isDiscount) {
+                                _nodeDiscountPrice.requestFocus();
+                              } else {
+                                FocusScope.of(context).unfocus();
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                      _partInputDiscount(),
+                      const SizedBox(height: defPading),
+                      TextFormField(
+                        focusNode: _nodeDecription,
+                        controller: _descriptionTEC,
+                        maxLines: 4,
+                        onEditingComplete: () => _nodeCategory.requestFocus(),
+                        decoration: InputDecoration(
+                            border: const OutlineInputBorder(
+                                borderRadius: BorderRadius.all(
+                                    Radius.circular(defRadius))),
+                            label: const Text("Product's description"),
+                            suffixIcon: IconButton(
+                                onPressed: () => _descriptionTEC.text = "",
+                                icon: const Icon(Icons.clear_rounded))),
+                        validator: (_) => null,
+                      ),
                       const SizedBox(height: defPading),
                       FilledButton(onPressed: _save, child: const Text("Save")),
                     ],
@@ -338,5 +540,21 @@ class _ProductEditorState extends State<ProductEditor> {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _descriptionTEC.dispose();
+    _nameTEC.dispose();
+    _priceTEC.dispose();
+    _providerTEC.dispose();
+    _discountPriceTEC.dispose();
+
+    _nodeCategory.dispose();
+    _nodeDecription.dispose();
+    _nodePrice.dispose();
+    _nodeProvider.dispose();
+    _nodeDiscountPrice.dispose();
+    super.dispose();
   }
 }
