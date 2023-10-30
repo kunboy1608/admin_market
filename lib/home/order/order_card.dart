@@ -24,19 +24,22 @@ class OrderCard extends StatelessWidget {
     return sum;
   }
 
-  void _nextStatus(BuildContext context) {
-    OrderAdminService.instance.forwardStep(order);
-
+  Future<void> _nextStatus(BuildContext context) async {
     // Incre quantity sold
+    debugPrint("${order.status}");
     if (order.status == 1) {
-      order.products?.forEach((key, value) {
+      order.products?.forEach((key, value) async {
         Product? p = context.read<ProductCubit>().currentState()[key];
+        p ??= await ProductService.instance.getById(key);
+        debugPrint("${p == null}");
         if (p != null) {
           p.quantitySold = (p.quantitySold ?? 0) + value.values.first;
           ProductService.instance.update(p);
         }
+        debugPrint("${p == null}");
       });
     }
+    OrderAdminService.instance.forwardStep(order);
   }
 
   @override
@@ -67,7 +70,7 @@ class OrderCard extends StatelessWidget {
               }),
           isThreeLine: true,
           subtitle: Text(
-              "Total: ${formatCurrency(_sum())}\nCreated date: ${order.uploadDate?.toDate().toString()}"),
+              "Subtotal: ${formatCurrency(_sum())}\nCreated date: ${order.uploadDate?.toDate().toString()}"),
           trailing: ![0, 4, 5, 6].contains(order.status)
               ? IconButton(
                   onPressed: () => _nextStatus(context),

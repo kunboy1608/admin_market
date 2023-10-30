@@ -194,6 +194,7 @@ class _ProductEditorState extends State<ProductEditor> {
         // ..price = double.parse(_priceTEC.text
         //     .replaceAll(ThousandsSeparatorInputFormatter.SEPARATOR, ''))
         ..price = double.parse(_priceTEC.text)
+        ..description = _descriptionTEC.text
         ..provider = _providerTEC.text);
     } else {
       ProductService.instance
@@ -203,6 +204,7 @@ class _ProductEditorState extends State<ProductEditor> {
             // ..price = double.parse(_priceTEC.text
             //     .replaceAll(ThousandsSeparatorInputFormatter.SEPARATOR, ''))
             ..price = double.parse(_priceTEC.text)
+            ..description = _descriptionTEC.text
             ..provider = _providerTEC.text)
           .then((_) {
         // delete old img

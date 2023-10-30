@@ -1,8 +1,11 @@
+import 'package:admin_market/bloc/product_cubit.dart';
 import 'package:admin_market/bloc/voucher_cubit.dart';
 import 'package:admin_market/entity/order.dart';
+import 'package:admin_market/entity/product.dart';
 import 'package:admin_market/entity/voucher.dart';
 import 'package:admin_market/home/order/product_in_order.dart';
 import 'package:admin_market/service/entity/order_admin_service.dart';
+import 'package:admin_market/service/entity/product_service.dart';
 import 'package:admin_market/util/string_utils.dart';
 import 'package:admin_market/util/widget_util.dart';
 import 'package:flutter/material.dart';
@@ -84,7 +87,23 @@ class _OrderEditorState extends State<OrderEditor> {
                         if (value != null && value == true) {
                           OrderAdminService.instance
                               .forwardStep(widget.order)
-                              .then((_) => Navigator.pop(context));
+                              .then((_) {
+                            // Incre quantity sold
+                            if (widget.order.status == 1) {
+                              widget.order.products?.forEach((key, value) {
+                                Product? p = context
+                                    .read<ProductCubit>()
+                                    .currentState()[key];
+                                if (p != null) {
+                                  p.quantitySold = (p.quantitySold ?? 0) +
+                                      value.values.first;
+                                  ProductService.instance.update(p);
+                                }
+                              });
+                            }
+
+                            Navigator.pop(context);
+                          });
                         }
                       });
                     },

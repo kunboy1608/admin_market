@@ -48,7 +48,7 @@ class ProductService extends EntityService<Product> {
   }
 
   @override
-  Future<void> update(Product e) {
+  Future<void> update(Product e) async {
     return FirestoreService.instance.getFireStore().then((fs) {
       return fs.collection(collectionName).doc(e.id).update(e.toMap()
         ..remove("id")
@@ -58,7 +58,7 @@ class ProductService extends EntityService<Product> {
   }
 
   @override
-  Future<Product?> getById(String id) {
+  Future<Product?> getById(String id) async {
     return FirestoreService.instance
         .getFireStore()
         .then((fs) => fs.collection(collectionName).doc(id).get().then((value) {
