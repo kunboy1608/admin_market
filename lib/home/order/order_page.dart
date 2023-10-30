@@ -80,6 +80,7 @@ class OrderpageState extends State<OrderPage>
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return DefaultTabController(
       length: _tabs.length,
       child: Scaffold(
