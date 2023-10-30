@@ -19,11 +19,12 @@ class VoucherPage extends StatefulWidget {
   State<VoucherPage> createState() => _VoucherPageState();
 }
 
-class _VoucherPageState extends State<VoucherPage> {
+class _VoucherPageState extends State<VoucherPage>
+    with AutomaticKeepAliveClientMixin {
   late ScrollController _scrollController;
   bool _isHidenFloatingButton = false;
 
-  final _streamController = StreamController<(DocumentChangeType, Voucher)>();
+  late StreamSubscription<QuerySnapshot<Map<String, dynamic>>> _voucherStream;
 
   @override
   void initState() {
@@ -47,25 +48,31 @@ class _VoucherPageState extends State<VoucherPage> {
       }
     });
 
-    VoucherService.instance.listenChanges(_streamController);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _streamController.stream.listen((event) {
-        switch (event.$1) {
-          case DocumentChangeType.added:
-          case DocumentChangeType.modified:
-            context.read<VoucherCubit>().addOrUpdateIfExist(event.$2);
-            break;
-          case DocumentChangeType.removed:
-            context.read<VoucherCubit>().remove(event.$2);
-            break;
-          default:
-        }
+      VoucherService.instance.getSnapshot().then((stream) {
+        _voucherStream = stream.listen((event) {
+          for (var element in event.docChanges) {
+            Voucher v = Voucher.fromMap(element.doc.data()!)
+              ..id = element.doc.id;
+            switch (element.type) {
+              case DocumentChangeType.added:
+              case DocumentChangeType.modified:
+                context.read<VoucherCubit>().addOrUpdateIfExist(v);
+                break;
+              case DocumentChangeType.removed:
+                context.read<VoucherCubit>().remove(v);
+                break;
+              default:
+            }
+          }
+        });
       });
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Scaffold(
       appBar: AppBar(
         title: const Text("Admin - Vouchers management"),
@@ -100,8 +107,11 @@ class _VoucherPageState extends State<VoucherPage> {
 
   @override
   void dispose() {
-    _streamController.close();
+    _voucherStream.cancel();
     _scrollController.dispose();
     super.dispose();
   }
+
+  @override
+  bool get wantKeepAlive => true;
 }

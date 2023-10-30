@@ -24,9 +24,9 @@ class _HomeState extends State<Home> {
 
     _controller = PageController();
     _listWidget = const [
+      VoucherPage(),
       ProductPage(),
       OrderPage(),
-      VoucherPage(),
       BannerPage()
     ];
   }
@@ -54,6 +54,11 @@ class _HomeState extends State<Home> {
         },
         destinations: const <NavigationDestination>[
           NavigationDestination(
+            selectedIcon: Icon(CupertinoIcons.tickets_fill),
+            icon: Icon(CupertinoIcons.tickets),
+            label: 'Voucher',
+          ),
+          NavigationDestination(
             selectedIcon: Icon(Icons.all_inbox_rounded),
             icon: Icon(Icons.all_inbox_outlined),
             label: 'Product',
@@ -62,11 +67,6 @@ class _HomeState extends State<Home> {
             selectedIcon: Icon(Icons.local_shipping_rounded),
             icon: Icon(Icons.local_shipping_outlined),
             label: 'Order',
-          ),
-          NavigationDestination(
-            selectedIcon: Icon(CupertinoIcons.tickets_fill),
-            icon: Icon(CupertinoIcons.tickets),
-            label: 'Voucher',
           ),
           NavigationDestination(
             selectedIcon: Icon(Icons.bookmarks_rounded),

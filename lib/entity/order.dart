@@ -15,6 +15,9 @@ class Order extends Entity {
   // 6: Refund
   int? status;
 
+  String? phoneNumber;
+  String? address;
+
   Order() {
     status = 0;
   }
@@ -22,6 +25,9 @@ class Order extends Entity {
   Order.fromMap(Map<String, dynamic> map) {
     userId = map["user_id"];
     status = map["status"];
+
+    phoneNumber = map["phone_number"];
+    address = map["address"];
 
     products = {};
     map["products"]?.forEach((key, value) {
@@ -50,7 +56,9 @@ class Order extends Entity {
         'user_id': userId,
         'vouchers': vouchers,
         'products': products,
-        'status': status
+        'status': status,
+        'phone_number': phoneNumber,
+        'address': address
       });
   }
 }

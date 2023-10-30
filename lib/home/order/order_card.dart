@@ -4,6 +4,7 @@ import 'package:admin_market/entity/product.dart';
 import 'package:admin_market/home/order/order_editor.dart';
 import 'package:admin_market/service/entity/order_admin_service.dart';
 import 'package:admin_market/service/entity/product_service.dart';
+import 'package:admin_market/service/entity/user_service.dart';
 import 'package:admin_market/util/string_utils.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -52,11 +53,18 @@ class OrderCard extends StatelessWidget {
       },
       child: Card(
         child: ListTile(
-          title: Text(
-            "User: ${order.userId}",
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
+          title: FutureBuilder(
+              future: UserService.instance.getById(order.userId ?? ""),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return Text("User: ${order.userId}");
+                }
+                return Text(
+                  "User: ${snapshot.data!.fullName}",
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                );
+              }),
           isThreeLine: true,
           subtitle: Text(
               "Total: ${formatCurrency(_sum())}\nCreated date: ${order.uploadDate?.toDate().toString()}"),

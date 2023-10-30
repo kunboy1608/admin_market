@@ -7,6 +7,7 @@ import 'package:admin_market/home/product/product_card.dart';
 import 'package:admin_market/home/product/product_editor.dart';
 import 'package:admin_market/service/entity/product_service.dart';
 import 'package:admin_market/service/google/firestorage_service.dart';
+import 'package:admin_market/service/image_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -20,14 +21,14 @@ class ProductPage extends StatefulWidget {
   State<ProductPage> createState() => _HomeState();
 }
 
-class _HomeState extends State<ProductPage> {
+class _HomeState extends State<ProductPage> with AutomaticKeepAliveClientMixin {
   final List<Product> _oldProduct = [];
   final _seconds = 5;
   Timer? _timer;
 
   bool? _isSortedByCategory;
 
-  final _streamController = StreamController<(DocumentChangeType, Product)>();
+  late StreamSubscription<QuerySnapshot<Map<String, dynamic>>> _productStream;
 
   late ScrollController _scrollController;
   bool _isHidenFloatingButton = false;
@@ -81,7 +82,6 @@ class _HomeState extends State<ProductPage> {
   @override
   void initState() {
     super.initState();
-    ProductService.instance.listenChanges(_streamController);
 
     _scrollController = ScrollController();
     _scrollController.addListener(() {
@@ -103,26 +103,41 @@ class _HomeState extends State<ProductPage> {
     });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _streamController.stream.listen((event) {
-        _isSortedByCategory = null;
-        switch (event.$1) {
-          case DocumentChangeType.added:
-          case DocumentChangeType.modified:
-            context.read<ProductCubit>().addOrUpdateIfExist(event.$2);
-            break;
-          case DocumentChangeType.removed:
-            // Support remove useless img on Firestorage
-            context.read<ProductCubit>().remove(event.$2);
-            FirestorageService.instance.delete(event.$2.imgUrl ?? "");
-            break;
-          default:
-        }
+      ProductService.instance.getSnapshot().then((stream) {
+        _productStream = stream.listen((event) {
+          for (var element in event.docChanges) {
+            Product p = Product.fromMap(element.doc.data()!)
+              ..id = element.doc.id;
+            // Get actually link
+            if (p.imgUrl != null &&
+                element.type != DocumentChangeType.removed) {
+              ImageService.instance.getActuallyLink(p.imgUrl!).then((value) {
+                p.actuallyLink = value;
+              });
+            }
+            switch (element.type) {
+              case DocumentChangeType.added:
+              case DocumentChangeType.modified:
+                context.read<ProductCubit>().addOrUpdateIfExist(p);
+                break;
+              case DocumentChangeType.removed:
+                // Support remove useless img on Firestorage
+                context.read<ProductCubit>().remove(p);
+                if (p.imgUrl != null) {
+                  FirestorageService.instance.delete(p.imgUrl!);
+                }
+                break;
+              default:
+            }
+          }
+        });
       });
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Scaffold(
       appBar: AppBar(
         title: const Text("Admin - Product management"),
@@ -189,7 +204,10 @@ class _HomeState extends State<ProductPage> {
 
   @override
   void dispose() {
-    _streamController.close();
+    _productStream.cancel();
     super.dispose();
   }
+
+  @override
+  bool get wantKeepAlive => true;
 }

@@ -6,6 +6,7 @@ import 'package:admin_market/home/banner/banner_card.dart';
 import 'package:admin_market/home/banner/banner_editor.dart';
 import 'package:admin_market/service/entity/banner_service.dart';
 import 'package:admin_market/service/google/firestorage_service.dart';
+import 'package:admin_market/service/image_service.dart';
 import 'package:admin_market/util/const.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
@@ -20,9 +21,10 @@ class BannerPage extends StatefulWidget {
   State<BannerPage> createState() => _BannerPageState();
 }
 
-class _BannerPageState extends State<BannerPage> {
+class _BannerPageState extends State<BannerPage>
+    with AutomaticKeepAliveClientMixin {
   late ScrollController _scrollController;
-  late StreamController<(DocumentChangeType, Banner)> _streamController;
+  late StreamSubscription<QuerySnapshot<Map<String, dynamic>>> _bannerStream;
   bool _isHidenFloatingButton = false;
 
   @override
@@ -47,29 +49,42 @@ class _BannerPageState extends State<BannerPage> {
       }
     });
 
-    _streamController = StreamController<(DocumentChangeType, Banner)>();
-    BannerService.instance.listenChanges(_streamController);
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _streamController.stream.listen((event) {
-        switch (event.$1) {
-          case DocumentChangeType.added:
-          case DocumentChangeType.modified:
-            context.read<BannerCubit>().addOrUpdateIfExist(event.$2);
-            break;
-          case DocumentChangeType.removed:
-            // Support remove useless img on Firestorage
-            context.read<BannerCubit>().remove(event.$2);
-            FirestorageService.instance.delete(event.$2.imgUrl ?? "");
-            break;
-          default:
-        }
+      BannerService.instance.getSnapshot().then((stream) {
+        _bannerStream = stream.listen((event) {
+          for (var element in event.docChanges) {
+            Banner b = Banner.fromMap(element.doc.data()!)..id = element.doc.id;
+            // Get actually link
+            if (b.imgUrl != null &&
+                element.type != DocumentChangeType.removed) {
+              ImageService.instance.getActuallyLink(b.imgUrl!).then((value) {
+                b.actuallyLink = value;
+              });
+            }
+
+            switch (element.type) {
+              case DocumentChangeType.added:
+              case DocumentChangeType.modified:
+                context.read<BannerCubit>().addOrUpdateIfExist(b);
+                break;
+              case DocumentChangeType.removed:
+                // Support remove useless img on Firestorage
+                context.read<BannerCubit>().remove(b);
+                if (b.imgUrl != null) {
+                  FirestorageService.instance.delete(b.imgUrl!);
+                }
+                break;
+              default:
+            }
+          }
+        });
       });
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Scaffold(
       appBar: AppBar(
         title: const Text("Admin - Banners Management"),
@@ -105,8 +120,12 @@ class _BannerPageState extends State<BannerPage> {
 
   @override
   void dispose() {
+    debugPrint("Banner Page: dipose");
+    _bannerStream.cancel();
     _scrollController.dispose();
-    _streamController.close();
     super.dispose();
   }
+
+  @override
+  bool get wantKeepAlive => true;
 }

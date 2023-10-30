@@ -15,11 +15,12 @@ class OrderPage extends StatefulWidget {
   State<OrderPage> createState() => OrderpageState();
 }
 
-class OrderpageState extends State<OrderPage> {
+class OrderpageState extends State<OrderPage>
+    with AutomaticKeepAliveClientMixin {
   late List<Tab> _tabs;
   late List<Widget> _tabViews;
 
-  final _streamController = StreamController<(DocumentChangeType, Order)>();
+  late StreamSubscription<QuerySnapshot<Map<String, dynamic>>> _orderStream;
 
   @override
   void initState() {
@@ -45,18 +46,22 @@ class OrderpageState extends State<OrderPage> {
     ];
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      OrderAdminService.instance.listenChanges(_streamController);
-      _streamController.stream.listen((event) {
-        switch (event.$1) {
-          case DocumentChangeType.added:
-          case DocumentChangeType.modified:
-            context.read<OrderCubit>().addOrUpdateIfExist(event.$2);
-            break;
-          case DocumentChangeType.removed:
-            context.read<OrderCubit>().remove(event.$2);
-            break;
-          default:
-        }
+      OrderAdminService.instance.getSnapshot().then((stream) {
+        _orderStream = stream.listen((event) {
+          for (var element in event.docChanges) {
+            Order o = Order.fromMap(element.doc.data()!)..id = element.doc.id;
+            switch (element.type) {
+              case DocumentChangeType.added:
+              case DocumentChangeType.modified:
+                context.read<OrderCubit>().addOrUpdateIfExist(o);
+                break;
+              case DocumentChangeType.removed:
+                context.read<OrderCubit>().remove(o);
+                break;
+              default:
+            }
+          }
+        });
       });
     });
   }
@@ -86,4 +91,13 @@ class OrderpageState extends State<OrderPage> {
           )),
     );
   }
+
+  @override
+  void dispose() {
+    _orderStream.cancel();
+    super.dispose();
+  }
+
+  @override
+  bool get wantKeepAlive => true;
 }

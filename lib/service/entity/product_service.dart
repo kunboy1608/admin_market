@@ -48,31 +48,6 @@ class ProductService extends EntityService<Product> {
   }
 
   @override
-  void listenChanges(
-      StreamController<(DocumentChangeType, Product)> controller) {
-    FirestoreService.instance
-        .getFireStore()
-        .then((fs) => fs.collection(collectionName).snapshots().listen((event) {
-              for (var element in event.docChanges) {
-                Product p = Product.fromMap(element.doc.data()!)
-                  ..id = element.doc.id;
-                // Get actually link
-                if (p.imgUrl != null &&
-                    element.type != DocumentChangeType.removed) {
-                  ImageService.instance
-                      .getActuallyLink(p.imgUrl!)
-                      .then((value) {
-                    p.actuallyLink = value;
-                    controller.sink.add((element.type, p));
-                  });
-                } else {
-                  controller.sink.add((element.type, p));
-                }
-              }
-            }));
-  }
-
-  @override
   Future<void> update(Product e) {
     return FirestoreService.instance.getFireStore().then((fs) {
       return fs.collection(collectionName).doc(e.id).update(e.toMap()

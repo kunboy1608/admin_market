@@ -45,14 +45,26 @@ class _OrderEditorState extends State<OrderEditor> {
       }
     }
 
-    return ListTile(
-      isThreeLine: true,
-      subtitle: Text(
-          "Subtotal: ${formatCurrency(sum)}\nDiscount: ${formatCurrency(discount)} \nAmount: ${formatCurrency(sum - discount)}"),
-      trailing: voucher != null
-          ? Text(
-              "${voucher.id}\n${voucher.percent}%\nMax:${formatCurrency(voucher.maxValue)}")
-          : null,
+    return SizedBox(
+      height: 150,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ListTile(
+            subtitle: Text(
+                "Address: ${widget.order.address}\nPhone number: ${widget.order.phoneNumber}"),
+          ),
+          ListTile(
+            isThreeLine: true,
+            subtitle: Text(
+                "Subtotal: ${formatCurrency(sum)}\nDiscount: ${formatCurrency(discount)} \nAmount: ${formatCurrency(sum - discount)}"),
+            trailing: voucher != null
+                ? Text(
+                    "${voucher.id}\n${voucher.percent}%\nMax:${formatCurrency(voucher.maxValue)}")
+                : null,
+          ),
+        ],
+      ),
     );
   }
 
@@ -61,50 +73,52 @@ class _OrderEditorState extends State<OrderEditor> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Order details"),
-        actions: [
-          IconButton(
-              onPressed: () {
-                WidgetUtil.showYesNoDialog(
-                        context, "Are you sure CONFIRM this order?",
-                        yesText: "Confirm")
-                    .then((value) {
-                  if (value != null && value == true) {
-                    OrderAdminService.instance
-                        .forwardStep(widget.order)
-                        .then((_) => Navigator.pop(context));
-                  }
-                });
-              },
-              icon: const Icon(Icons.forward_rounded)),
-          IconButton(
-              onPressed: () {
-                WidgetUtil.showYesNoDialog(
-                        context, "Are you sure REFUND this order?",
-                        yesText: "Refund")
-                    .then((value) {
-                  if (value != null && value == true) {
-                    OrderAdminService.instance
-                        .refund(widget.order)
-                        .then((_) => Navigator.pop(context));
-                  }
-                });
-              },
-              icon: const Icon(Icons.refresh_rounded)),
-          IconButton(
-              onPressed: () {
-                WidgetUtil.showYesNoDialog(
-                        context, "Are you sure CANCEL this order?",
-                        yesText: "Sure")
-                    .then((value) {
-                  if (value != null && value == true) {
-                    OrderAdminService.instance
-                        .cancel(widget.order)
-                        .then((_) => Navigator.pop(context));
-                  }
-                });
-              },
-              icon: const Icon(Icons.clear_rounded)),
-        ],
+        actions: widget.order.status != 0
+            ? [
+                IconButton(
+                    onPressed: () {
+                      WidgetUtil.showYesNoDialog(
+                              context, "Are you sure CONFIRM this order?",
+                              yesText: "Confirm")
+                          .then((value) {
+                        if (value != null && value == true) {
+                          OrderAdminService.instance
+                              .forwardStep(widget.order)
+                              .then((_) => Navigator.pop(context));
+                        }
+                      });
+                    },
+                    icon: const Icon(Icons.forward_rounded)),
+                IconButton(
+                    onPressed: () {
+                      WidgetUtil.showYesNoDialog(
+                              context, "Are you sure REFUND this order?",
+                              yesText: "Refund")
+                          .then((value) {
+                        if (value != null && value == true) {
+                          OrderAdminService.instance
+                              .refund(widget.order)
+                              .then((_) => Navigator.pop(context));
+                        }
+                      });
+                    },
+                    icon: const Icon(Icons.refresh_rounded)),
+                IconButton(
+                    onPressed: () {
+                      WidgetUtil.showYesNoDialog(
+                              context, "Are you sure CANCEL this order?",
+                              yesText: "Sure")
+                          .then((value) {
+                        if (value != null && value == true) {
+                          OrderAdminService.instance
+                              .cancel(widget.order)
+                              .then((_) => Navigator.pop(context));
+                        }
+                      });
+                    },
+                    icon: const Icon(Icons.clear_rounded)),
+              ]
+            : null,
       ),
       body: ListView.builder(
         itemCount: widget.order.products?.length ?? 0,
@@ -116,7 +130,8 @@ class _OrderEditorState extends State<OrderEditor> {
           );
         },
       ),
-      bottomNavigationBar: _summaryWidget(context),
+      bottomNavigationBar: BlocBuilder<VoucherCubit, Map<String, Voucher>>(
+          builder: (context, state) => _summaryWidget(context)),
     );
   }
 }

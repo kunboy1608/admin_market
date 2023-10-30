@@ -28,17 +28,16 @@ class MainApp extends StatelessWidget {
         BlocProvider(create: (context) => BannerCubit({})),
       ],
       child: MaterialApp(
-        theme: ThemeData(useMaterial3: true),
-        darkTheme: ThemeData.dark(useMaterial3: true),
-        // builder: (context, child) {
-        //   final mediaQueryData = MediaQuery.of(context);
-        //   debugPrint(mediaQueryData.textScaleFactor.toString());
-        //   final scale = mediaQueryData.textScaleFactor.clamp(0.85, 1.2);
-        //   return MediaQuery(
-        //       data: MediaQuery.of(context).copyWith(textScaleFactor: scale),
-        //       child: const Login()
-        //       );
-        // },
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(
+              brightness: Brightness.light,
+              seedColor: const Color.fromARGB(255, 0, 172, 254)),
+          useMaterial3: true),
+      darkTheme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(
+              brightness: Brightness.dark,
+              seedColor: const Color.fromARGB(255, 13, 3, 118)),
+          useMaterial3: true),
         home: const Login(),
       ),
     );

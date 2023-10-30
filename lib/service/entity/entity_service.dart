@@ -8,7 +8,11 @@ abstract class EntityService<T extends Entity> {
   abstract String collectionName;
 
   Future<List<T>?> get();
-  void listenChanges(StreamController<(DocumentChangeType, T)> controller);
+
+  Future<Stream<QuerySnapshot<Map<String, dynamic>>>> getSnapshot() =>
+      FirestoreService.instance
+          .getFireStore()
+          .then((fs) => fs.collection(collectionName).snapshots());
 
   Future<DocumentReference<Map<String, dynamic>>> add(T e) {
     return FirestoreService.instance.getFireStore().then((fs) => fs

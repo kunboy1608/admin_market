@@ -58,19 +58,6 @@ class OrderAdminService extends EntityService<Order> {
   }
 
   @override
-  void listenChanges(StreamController<(DocumentChangeType, Order)> controller) {
-    FirestoreService.instance
-        .getFireStore()
-        .then((fs) => fs.collection(collectionName).snapshots().listen((event) {
-              for (var element in event.docChanges) {
-                Order p = Order.fromMap(element.doc.data()!)
-                  ..id = element.doc.id;
-                controller.sink.add((element.type, p));
-              }
-            }));
-  }
-
-  @override
   Future<Order?> getById(String id) {
     return FirestoreService.instance
         .getFireStore()
