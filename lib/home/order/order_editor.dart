@@ -34,9 +34,9 @@ class _OrderEditorState extends State<OrderEditor> {
           ? context.read<VoucherCubit>().state[widget.order.vouchers!.first]
           : null;
       if (voucher != null) {
-        if (voucher.percent != null || voucher.percent! > 0) {
+        if (voucher.percent != null && voucher.percent! > 0) {
           discount = sum * (voucher.percent! / 100);
-          if (voucher.maxValue != null) {
+          if (voucher.maxValue != null && voucher.maxValue! > 0) {
             discount = discount.clamp(0, voucher.maxValue!);
           }
         } else {
