@@ -80,7 +80,9 @@ Distributed under the MIT License.
 
 Phu Hoang - kunboy1608@gmail.com
 
-Project Link: [https://github.com/kunboy1608/todo-app/](https://github.com/kunboy1608/todo-app/)
+Admin Project Link: [https://github.com/kunboy1608/admin_market_flutter](https://github.com/kunboy1608/admin_market_flutter)
+
+User Project Link: [https://github.com/kunboy1608/user_market_flutter](https://github.com/kunboy1608/user_market_flutter)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
