@@ -10,7 +10,7 @@
     <img src="https://github.com/othneildrew/Best-README-Template/blob/master/images/logo.png" alt="Logo" width="80" height="80">
   </a>
 
-  <h3 align="center">Fruit Clients - Mobile - Flutter</h3>
+  <h3 align="center">Fruit Admin - Mobile - Flutter</h3>
 
   <p align="center">
     Developed by HoangDP
