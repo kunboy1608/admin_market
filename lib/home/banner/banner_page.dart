@@ -105,7 +105,7 @@ class _BannerPageState extends State<BannerPage>
       floatingActionButton: _isHidenFloatingButton
           ? null
           : FloatingActionButton(
-              heroTag: 'thumbnail',
+              heroTag: 'banner_card_hero',
               onPressed: () {
                 Navigator.push(
                     context,
@@ -113,7 +113,7 @@ class _BannerPageState extends State<BannerPage>
                       builder: (context) => const BannerEditor(),
                     ));
               },
-              child: const Icon(Icons.add_outlined),
+              child: const Icon(Icons.add_rounded),
             ),
     );
   }

@@ -197,7 +197,7 @@ class _HomeState extends State<ProductPage> with AutomaticKeepAliveClientMixin {
                     CupertinoPageRoute(
                         builder: (context) => const ProductEditor()));
               },
-              child: const Icon(Icons.add_outlined),
+              child: const Icon(Icons.add_rounded),
             ),
     );
   }

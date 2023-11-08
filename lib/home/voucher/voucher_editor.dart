@@ -247,8 +247,7 @@ class _VoucherEditorState extends State<VoucherEditor> {
                       return null;
                     },
                     decoration: InputDecoration(
-                        label: const Text("Count"),
-                        hintText: "A value of -1 indicates unlimited usage",
+                        label: const Text("Count"),                        
                         helperText: "How many it can be applied",
                         suffixIcon: IconButton(
                             onPressed: () => _countTEC.text = "",

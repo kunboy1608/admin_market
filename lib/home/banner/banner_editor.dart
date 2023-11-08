@@ -36,6 +36,7 @@ class _BannerEditorState extends State<BannerEditor> {
     if (widget.banner != null) {
       if (_banner.actuallyLink != null && _banner.actuallyLink!.isNotEmpty) {
         _img = FadeInImage(
+          fit: BoxFit.cover,
           placeholder: const AssetImage('assets/img/loading.gif'),
           image: FileImage(File(_banner.actuallyLink!)),
         );
@@ -97,13 +98,14 @@ class _BannerEditorState extends State<BannerEditor> {
         context: context,
         builder: (context) => DraggableScrollableSheet(
             expand: false,
-            initialChildSize: 0.35,
-            maxChildSize: 0.35,
-            minChildSize: 0.3,
+            initialChildSize: 0.44,
+            maxChildSize: 0.44,
+            minChildSize: 0.35,
             builder: (context, scrollController) {
               return SingleChildScrollView(
                 controller: scrollController,
                 child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Padding(
                       padding: const EdgeInsets.all(defPading / 2),
@@ -227,13 +229,11 @@ class _BannerEditorState extends State<BannerEditor> {
           tag: 'banner_card_hero${_banner.id ?? ""}',
           child: ClipRRect(
               borderRadius: BorderRadius.circular(defRadius),
-              child: Align(alignment: Alignment.topCenter, child: _img!)),
+              child: _img!),
         ),
       ),
       bottomSheet: ClipRRect(
-        borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(defRadius),
-            topRight: Radius.circular(defRadius)),
+        borderRadius: BorderRadius.circular(defRadius),
         child: SizedBox(
           height: 60,
           child: Row(

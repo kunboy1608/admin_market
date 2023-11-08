@@ -6,6 +6,7 @@ import 'package:admin_market/service/entity/order_admin_service.dart';
 import 'package:admin_market/service/entity/product_service.dart';
 import 'package:admin_market/service/entity/user_service.dart';
 import 'package:admin_market/util/string_utils.dart';
+import 'package:admin_market/util/widget_util.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -25,21 +26,26 @@ class OrderCard extends StatelessWidget {
   }
 
   Future<void> _nextStatus(BuildContext context) async {
-    // Incre quantity sold
-    debugPrint("${order.status}");
-    if (order.status == 1) {
-      order.products?.forEach((key, value) async {
-        Product? p = context.read<ProductCubit>().currentState()[key];
-        p ??= await ProductService.instance.getById(key);
-        debugPrint("${p == null}");
-        if (p != null) {
-          p.quantitySold = (p.quantitySold ?? 0) + value.values.first;
-          ProductService.instance.update(p);
+    WidgetUtil.showYesNoDialog(context, "Are you CONFIRM this orders?")
+        .then((confirm) {
+      if (confirm != null && confirm == true) {
+        // Incre quantity sold
+        debugPrint("${order.status}");
+        if (order.status == 1) {
+          order.products?.forEach((key, value) async {
+            Product? p = context.read<ProductCubit>().currentState()[key];
+            p ??= await ProductService.instance.getById(key);
+            debugPrint("${p == null}");
+            if (p != null) {
+              p.quantitySold = (p.quantitySold ?? 0) + value.values.first;
+              ProductService.instance.update(p);
+            }
+            debugPrint("${p == null}");
+          });
         }
-        debugPrint("${p == null}");
-      });
-    }
-    OrderAdminService.instance.forwardStep(order);
+        OrderAdminService.instance.forwardStep(order);
+      }
+    });
   }
 
   @override

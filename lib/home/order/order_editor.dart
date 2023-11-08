@@ -63,7 +63,7 @@ class _OrderEditorState extends State<OrderEditor> {
                 "Subtotal: ${formatCurrency(sum)}\nDiscount: ${formatCurrency(discount)} \nAmount: ${formatCurrency(sum - discount)}"),
             trailing: voucher != null
                 ? Text(
-                    "${voucher.id}\n${voucher.percent}%\nMax:${formatCurrency(voucher.maxValue)}")
+                    "${voucher.name}\n${voucher.percent}%\nMax:${formatCurrency(voucher.maxValue)}")
                 : null,
           ),
         ],
@@ -78,36 +78,38 @@ class _OrderEditorState extends State<OrderEditor> {
         title: const Text("Order details"),
         actions: widget.order.status != 0
             ? [
-                IconButton(
-                    onPressed: () {
-                      WidgetUtil.showYesNoDialog(
-                              context, "Are you sure CONFIRM this order?",
-                              yesText: "Confirm")
-                          .then((value) {
-                        if (value != null && value == true) {
-                          OrderAdminService.instance
-                              .forwardStep(widget.order)
-                              .then((_) {
-                            // Incre quantity sold
-                            if (widget.order.status == 1) {
-                              widget.order.products?.forEach((key, value) {
-                                Product? p = context
-                                    .read<ProductCubit>()
-                                    .currentState()[key];
-                                if (p != null) {
-                                  p.quantitySold = (p.quantitySold ?? 0) +
-                                      value.values.first;
-                                  ProductService.instance.update(p);
+                widget.order.status == null || widget.order.status! < 4
+                    ? IconButton(
+                        onPressed: () {
+                          WidgetUtil.showYesNoDialog(
+                                  context, "Are you sure CONFIRM this order?",
+                                  yesText: "Confirm")
+                              .then((value) {
+                            if (value != null && value == true) {
+                              OrderAdminService.instance
+                                  .forwardStep(widget.order)
+                                  .then((_) {
+                                // Incre quantity sold
+                                if (widget.order.status == 1) {
+                                  widget.order.products?.forEach((key, value) {
+                                    Product? p = context
+                                        .read<ProductCubit>()
+                                        .currentState()[key];
+                                    if (p != null) {
+                                      p.quantitySold = (p.quantitySold ?? 0) +
+                                          value.values.first;
+                                      ProductService.instance.update(p);
+                                    }
+                                  });
                                 }
+
+                                Navigator.pop(context);
                               });
                             }
-
-                            Navigator.pop(context);
                           });
-                        }
-                      });
-                    },
-                    icon: const Icon(Icons.forward_rounded)),
+                        },
+                        icon: const Icon(Icons.forward_rounded))
+                    : Container(),
                 IconButton(
                     onPressed: () {
                       WidgetUtil.showYesNoDialog(

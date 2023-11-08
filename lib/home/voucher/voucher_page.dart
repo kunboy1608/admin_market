@@ -100,7 +100,7 @@ class _VoucherPageState extends State<VoucherPage>
                       builder: (context) => const VoucherEditor(),
                     ));
               },
-              child: const Icon(Icons.add_outlined),
+              child: const Icon(Icons.add_rounded),
             ),
     );
   }
