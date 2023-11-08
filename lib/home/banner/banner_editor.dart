@@ -224,7 +224,7 @@ class _BannerEditorState extends State<BannerEditor> {
       body: GestureDetector(
         onTap: _showOptionChooseImage,
         child: Hero(
-          tag: 'thumbnail${_banner.id ?? ""}',
+          tag: 'banner_card_hero${_banner.id ?? ""}',
           child: ClipRRect(
               borderRadius: BorderRadius.circular(defRadius),
               child: Align(alignment: Alignment.topCenter, child: _img!)),

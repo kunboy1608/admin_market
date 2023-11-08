@@ -24,7 +24,7 @@ class BannerCard extends StatelessWidget {
             ));
       },
       child: Hero(
-          tag: 'thumbnail${banner.id}',
+          tag: 'banner_card_hero${banner.id}',
           child: ClipRRect(
               borderRadius: BorderRadius.circular(defRadius),
               child: banner.actuallyLink != null &&

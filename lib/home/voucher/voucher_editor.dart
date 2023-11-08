@@ -3,6 +3,7 @@ import 'package:admin_market/service/entity/voucher_service.dart';
 import 'package:admin_market/util/const.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 
 class VoucherEditor extends StatefulWidget {
@@ -25,6 +26,9 @@ class _VoucherEditorState extends State<VoucherEditor> {
   final FocusNode _maxValueNode = FocusNode();
   final FocusNode _countNode = FocusNode();
 
+  late ScrollController _scrollController;
+  bool _isHidenFloatingButton = false;
+
   late Voucher _voucher;
 
   DateTime? _startDate;
@@ -34,6 +38,25 @@ class _VoucherEditorState extends State<VoucherEditor> {
   @override
   void initState() {
     super.initState();
+    _scrollController = ScrollController();
+    _scrollController.addListener(() {
+      if (_scrollController.position.userScrollDirection ==
+          ScrollDirection.forward) {
+        if (_isHidenFloatingButton == true) {
+          setState(() {
+            _isHidenFloatingButton = false;
+          });
+        }
+      } else if (_scrollController.position.userScrollDirection ==
+          ScrollDirection.reverse) {
+        if (_isHidenFloatingButton == false) {
+          setState(() {
+            _isHidenFloatingButton = true;
+          });
+        }
+      }
+    });
+
     _voucher = widget.voucher ?? Voucher();
     if (widget.voucher != null) {
       _isPublic = _voucher.isPublic;
@@ -74,6 +97,18 @@ class _VoucherEditorState extends State<VoucherEditor> {
       return;
     }
 
+    if (_startDate != null &&
+        _endDate != null &&
+        _startDate!.isAfter(_endDate!)) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("The start date must be before the end date"),
+        ),
+      );
+      return;
+    }
+
     _voucher.name = _codeTEC.text.toUpperCase();
     _voucher.percent = double.parse(_percentTEC.text);
     _voucher.maxValue = double.parse(_maxValueTEC.text);
@@ -100,6 +135,7 @@ class _VoucherEditorState extends State<VoucherEditor> {
         title: const Text("Voucher Editor"),
       ),
       body: SingleChildScrollView(
+        controller: _scrollController,
         child: Padding(
           padding: const EdgeInsets.all(defPading),
           child: Form(
@@ -291,10 +327,13 @@ class _VoucherEditorState extends State<VoucherEditor> {
               )),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _save,
-        child: const Icon(Icons.save_as_rounded),
-      ),
+      floatingActionButton: _isHidenFloatingButton
+          ? null
+          : FloatingActionButton(
+              heroTag: 'voucher_card_hero',
+              onPressed: _save,
+              child: const Icon(Icons.save_as_rounded),
+            ),
     );
   }
 
@@ -307,6 +346,7 @@ class _VoucherEditorState extends State<VoucherEditor> {
     _maxValueTEC.dispose();
     _percentNode.dispose();
     _percentTEC.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 }

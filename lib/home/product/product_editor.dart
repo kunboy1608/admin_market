@@ -69,6 +69,7 @@ class _ProductEditorState extends State<ProductEditor> {
 
       _isDiscount = _pro.discountPrice != null;
       _discountPriceTEC.text = _pro.discountPrice?.toString() ?? "";
+      _descriptionTEC.text = _pro.description ?? "";
 
       if (widget.data!.actuallyLink != null &&
           widget.data!.actuallyLink!.isNotEmpty) {
@@ -407,7 +408,7 @@ class _ProductEditorState extends State<ProductEditor> {
                   );
                 },
                 child: Hero(
-                  tag: 'thumbnail${widget.data?.id ?? ""}',
+                  tag: 'product_card_hero${widget.data?.id ?? ""}',
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(defRadius),
                     child: Container(child: _img),

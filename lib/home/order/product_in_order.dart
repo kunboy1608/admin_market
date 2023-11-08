@@ -84,7 +84,7 @@ class _ProductInOrderState extends State<ProductInOrder> {
         builder: (context, constraints) => Row(
           children: [
             Hero(
-                tag: 'thumbnail${_product.id ?? ""}',
+                tag: 'thumbnail product in order ${widget.productId}',
                 child: SizedBox(
                   height: 160.0,
                   width: 160.0,
@@ -93,6 +93,7 @@ class _ProductInOrderState extends State<ProductInOrder> {
                       child: _product.actuallyLink != null &&
                               _product.actuallyLink!.isNotEmpty
                           ? FadeInImage(
+                              fit: BoxFit.cover,
                               placeholder:
                                   const AssetImage('assets/img/loading.gif'),
                               image: FileImage(File(_product.actuallyLink!)),

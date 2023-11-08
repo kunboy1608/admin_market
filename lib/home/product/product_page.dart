@@ -190,7 +190,7 @@ class _HomeState extends State<ProductPage> with AutomaticKeepAliveClientMixin {
       floatingActionButton: _isHidenFloatingButton
           ? null
           : FloatingActionButton(
-              heroTag: 'thumbnail',
+              heroTag: 'product_card_hero',
               onPressed: () {
                 Navigator.push(
                     context,

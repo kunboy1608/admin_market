@@ -100,7 +100,7 @@ class _ProductCardState extends State<ProductCard> {
             child: Row(
               children: [
                 Hero(
-                    tag: 'thumbnail${_pro.id}',
+                    tag: 'product_card_hero${_pro.id}',
                     child: SizedBox(
                       height: 160.0,
                       width: 160.0,

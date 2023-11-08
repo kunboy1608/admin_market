@@ -92,7 +92,7 @@ class _VoucherPageState extends State<VoucherPage>
       floatingActionButton: _isHidenFloatingButton
           ? null
           : FloatingActionButton(
-              heroTag: 'thumbnail',
+              heroTag: 'voucher_card_hero',
               onPressed: () {
                 Navigator.push(
                     context,
