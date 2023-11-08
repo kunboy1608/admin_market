@@ -10,7 +10,7 @@
     <img src="https://github.com/othneildrew/Best-README-Template/blob/master/images/logo.png" alt="Logo" width="80" height="80">
   </a>
 
-  <h3 align="center">Fruit Clients - Mobile - Flutter</h3>
+  <h3 align="center">Fruit Admin - Mobile - Flutter</h3>
 
   <p align="center">
     Developed by HoangDP
@@ -80,7 +80,9 @@ Distributed under the MIT License.
 
 Phu Hoang - kunboy1608@gmail.com
 
-Project Link: [https://github.com/kunboy1608/todo-app/](https://github.com/kunboy1608/todo-app/)
+Admin Project Link: [https://github.com/kunboy1608/admin_market_flutter](https://github.com/kunboy1608/admin_market_flutter)
+
+User Project Link: [https://github.com/kunboy1608/user_market_flutter](https://github.com/kunboy1608/user_market_flutter)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
